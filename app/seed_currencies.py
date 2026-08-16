@@ -1,0 +1,23 @@
+"""Devises internationales par défaut (taux indicatifs vs XOF)."""
+DEFAULT_CURRENCIES = [
+    ("XOF", "Franc CFA (BCEAO)", "FCFA", 1.0, 0, True),
+    ("EUR", "Euro", "€", 655.957, 2, True),
+    ("USD", "Dollar US", "$", 600.0, 2, True),
+    ("GBP", "Livre Sterling", "£", 760.0, 2, True),
+    ("CAD", "Dollar Canadien", "C$", 440.0, 2, True),
+    ("CHF", "Franc Suisse", "CHF", 680.0, 2, True),
+    ("JPY", "Yen Japonais", "¥", 4.0, 0, True),
+    ("CNY", "Yuan Chinois", "¥", 83.0, 2, True),
+    ("AUD", "Dollar Australien", "A$", 390.0, 2, True),
+    ("NZD", "Dollar Néo-Zélandais", "NZ$", 360.0, 2, True),
+    ("SEK", "Couronne Suédoise", "kr", 58.0, 2, True),
+    ("NOK", "Couronne Norvégienne", "kr", 56.0, 2, True),
+    ("DKK", "Couronne Danoise", "kr", 88.0, 2, True),
+    ("ZAR", "Rand Sud-Africain", "R", 33.0, 2, True),
+    ("MAD", "Dirham Marocain", "DH", 60.0, 2, True),
+    ("NGN", "Naira Nigérian", "₦", 0.4, 2, True),
+    ("GHS", "Cedi Ghanéen", "₵", 50.0, 2, True),
+    ("INR", "Roupie Indienne", "₹", 7.2, 2, True),
+    ("AED", "Dirham Émirati", "د.إ", 163.0, 2, True),
+    ("SAR", "Riyal Saoudien", "﷼", 160.0, 2, True),
+]

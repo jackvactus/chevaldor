@@ -1,0 +1,16 @@
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+sqlalchemy==2.0.35
+pydantic==2.9.2
+python-multipart==0.0.12
+openpyxl>=3.1.5,<3.2
+pandas>=2.2.0
+python-jose[cryptography]==3.3.0
+bcrypt==4.2.0
+reportlab==4.2.5
+pyotp==2.9.0
+qrcode[pil]==7.4.2
+pypdf==5.1.0
+Pillow>=10.0.0
+pytesseract>=0.3.10
+pdf2image>=1.17.0
