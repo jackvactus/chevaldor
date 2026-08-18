@@ -1,0 +1,179 @@
+// Cheval d'Or ERP — backend Next.js (fondations)
+// Périmètre de cette 1ère passe : auth/RBAC + Clients + Devis + Factures.
+// Les autres modules (stock, compta SYSCOHADA, RH/paie, CRM avancé...) suivront.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  DG
+  MANAGER
+}
+
+enum DocumentStatus {
+  BROUILLON
+  ENVOYE
+  ACCEPTE
+  REFUSE
+  FACTURE
+  PAYEE
+  PARTIELLEMENT_PAYEE
+  EN_RETARD
+  ANNULE
+}
+
+model Company {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  name      String
+  legalForm String   @default("SARL") @map("legal_form")
+  address   String   @default("")
+  phone     String   @default("")
+  email     String   @default("")
+  currency  String   @default("XOF")
+  isDefault Boolean  @default(true) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  users    User[]
+  clients  Client[]
+  quotes   Quote[]
+  invoices Invoice[]
+
+  @@map("companies")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  username     String?  @unique
+  passwordHash String   @map("password_hash")
+  fullName     String   @default("") @map("full_name")
+  role         Role     @default(MANAGER)
+  isActive     Boolean  @default(true) @map("is_active")
+  companyId    Int?     @map("company_id")
+  company      Company? @relation(fields: [companyId], references: [id])
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("users")
+}
+
+model Client {
+  id                     Int      @id @default(autoincrement())
+  name                   String
+  type                   String   @default("particulier")
+  email                  String   @default("")
+  phone                  String   @default("")
+  city                   String   @default("")
+  segment                String   @default("")
+  accountCode            String?  @map("account_code")
+  creditLimit            Decimal  @default(0) @map("credit_limit") @db.Decimal(14, 2)
+  paymentTermsDays       Int      @default(30) @map("payment_terms_days")
+  defaultDiscountPct     Decimal  @default(0) @map("default_discount_pct") @db.Decimal(5, 2)
+  defaultVatPct          Decimal  @default(0) @map("default_vat_pct") @db.Decimal(5, 2)
+  defaultCommissionPct   Decimal  @default(0) @map("default_commission_pct") @db.Decimal(5, 2)
+  notes                  String   @default("")
+  isArchived             Boolean  @default(false) @map("is_archived")
+  companyId              Int?     @map("company_id")
+  company                Company? @relation(fields: [companyId], references: [id])
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  quotes   Quote[]
+  invoices Invoice[]
+
+  @@index([companyId])
+  @@map("clients")
+}
+
+model Quote {
+  id              Int            @id @default(autoincrement())
+  number          String         @unique
+  clientId        Int            @map("client_id")
+  client          Client         @relation(fields: [clientId], references: [id])
+  status          DocumentStatus @default(BROUILLON)
+  date            DateTime       @default(now())
+  validUntil      DateTime?      @map("valid_until")
+  discountPct     Decimal        @default(0) @map("discount_pct") @db.Decimal(5, 2)
+  discountAmount  Decimal        @default(0) @map("discount_amount") @db.Decimal(14, 2)
+  notes           String         @default("")
+  companyId       Int?           @map("company_id")
+  company         Company?       @relation(fields: [companyId], references: [id])
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  lines    QuoteLine[]
+  invoices Invoice[]
+
+  @@index([companyId])
+  @@index([clientId])
+  @@map("quotes")
+}
+
+model QuoteLine {
+  id             Int     @id @default(autoincrement())
+  quoteId        Int     @map("quote_id")
+  quote          Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  position       Int     @default(0)
+  description    String
+  reference      String  @default("")
+  unit           String  @default("")
+  quantity       Decimal @default(1) @db.Decimal(14, 3)
+  unitPrice      Decimal @default(0) @map("unit_price") @db.Decimal(14, 2)
+  vatRate        Decimal @default(0) @map("vat_rate") @db.Decimal(5, 2)
+  discountAmount Decimal @default(0) @map("discount_amount") @db.Decimal(14, 2)
+  accountCode    String? @map("account_code")
+
+  @@index([quoteId])
+  @@map("quote_lines")
+}
+
+model Invoice {
+  id             Int            @id @default(autoincrement())
+  number         String         @unique
+  clientId       Int            @map("client_id")
+  client         Client         @relation(fields: [clientId], references: [id])
+  quoteId        Int?           @map("quote_id")
+  quote          Quote?         @relation(fields: [quoteId], references: [id])
+  status         DocumentStatus @default(BROUILLON)
+  date           DateTime       @default(now())
+  dueDate        DateTime?      @map("due_date")
+  discountPct    Decimal        @default(0) @map("discount_pct") @db.Decimal(5, 2)
+  discountAmount Decimal        @default(0) @map("discount_amount") @db.Decimal(14, 2)
+  paidAmount     Decimal        @default(0) @map("paid_amount") @db.Decimal(14, 2)
+  notes          String         @default("")
+  companyId      Int?           @map("company_id")
+  company        Company?       @relation(fields: [companyId], references: [id])
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  lines InvoiceLine[]
+
+  @@index([companyId])
+  @@index([clientId])
+  @@map("invoices")
+}
+
+model InvoiceLine {
+  id             Int     @id @default(autoincrement())
+  invoiceId      Int     @map("invoice_id")
+  invoice        Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  position       Int     @default(0)
+  description    String
+  reference      String  @default("")
+  unit           String  @default("")
+  quantity       Decimal @default(1) @db.Decimal(14, 3)
+  unitPrice      Decimal @default(0) @map("unit_price") @db.Decimal(14, 2)
+  vatRate        Decimal @default(0) @map("vat_rate") @db.Decimal(5, 2)
+  discountAmount Decimal @default(0) @map("discount_amount") @db.Decimal(14, 2)
+  accountCode    String? @map("account_code")
+
+  @@index([invoiceId])
+  @@map("invoice_lines")
+}
